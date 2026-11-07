@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 use crate::atom::{AtomFeed, PaperRecord};
+use crate::policy::{sanitize_returned_text, strict_sanitize_from_env};
 use crate::search_query::SearchParams;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -36,6 +37,8 @@ pub fn paper_to_json_map(
     abstract_mode: crate::search_query::AbstractMode,
 ) -> serde_json::Value {
     use crate::content::{snippet_abstract, ABSTRACT_SNIPPET_CHARS};
+    let clean_abstract =
+        sanitize_returned_text(&paper.abstract_text, strict_sanitize_from_env()).text;
     let mut obj = serde_json::json!({
         "id": paper.id,
         "versioned_id": paper.versioned_id,
@@ -49,11 +52,13 @@ pub fn paper_to_json_map(
     match abstract_mode {
         crate::search_query::AbstractMode::None => {}
         crate::search_query::AbstractMode::Snippet => {
-            obj["abstract"] =
-                serde_json::Value::String(snippet_abstract(&paper.abstract_text, ABSTRACT_SNIPPET_CHARS));
+            obj["abstract"] = serde_json::Value::String(snippet_abstract(
+                &clean_abstract,
+                ABSTRACT_SNIPPET_CHARS,
+            ));
         }
         crate::search_query::AbstractMode::Full => {
-            obj["abstract"] = serde_json::Value::String(paper.abstract_text.clone());
+            obj["abstract"] = serde_json::Value::String(clean_abstract);
         }
     }
     obj
