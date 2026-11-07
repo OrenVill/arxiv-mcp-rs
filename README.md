@@ -2,13 +2,17 @@
 
 Stateless Rust MCP server for arXiv literature work: upstream-aligned **tools and prompts** (per [SPEC.md](./SPEC.md)), fresh on-disk store, **stdio + Streamable HTTP** in v1, built-in PDF path (`pdf-extract` + `lopdf`).
 
-**Repository:** https://github.com/OrenVill/arxiv-mcp-rs
+**Origin:** https://cursor.com/codebase/oren/arxiv-mcp-rs (**Private** by default; change visibility in repo settings)
 
-**Upstream inspiration:** [blazickjp/arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server) (behavioral reference; not a cache drop-in).
+**Upstream inspiration:** [blazickjp/arxiv-mcp-server](https://pypi.org/project/arxiv-mcp-server/) on PyPI (behavioral reference; not a cache drop-in).
 
 ## Status
 
 Milestone **M1** scaffold: workspace, ID validation, store layout shell, MCP `ping` tool, stdio and stateless HTTP (`legacy_session_mode = false`).
+
+## Clone locally (Windows → WSL)
+
+See [docs/ORIGIN.md](./docs/ORIGIN.md) for Origin CLI install, auth, and `origin repo clone oren/arxiv-mcp-rs`.
 
 ## Requirements
 
@@ -58,10 +62,6 @@ Default store: `~/.arxiv-mcp-rs/papers` (**D2:** does not read or migrate Python
 | `arxiv-store` | `StoreBackend` + local FS v1 |
 | `arxiv-fetch` | Allowlisted HTTP (WIP) |
 | `arxiv-convert` | HTML/PDF → Markdown (WIP) |
-
-## GitHub
-
-Public repo setup (you create empty repo, then push): [docs/GITHUB.md](./docs/GITHUB.md).
 
 ## Contributing
 

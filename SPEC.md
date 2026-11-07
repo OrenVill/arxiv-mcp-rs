@@ -3,7 +3,7 @@
 **Version:** 0.1-draft  
 **Date:** 2026-11-07  
 **Status:** M1 scaffold (implementation in progress)  
-**Upstream reference:** [blazickjp/arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server) @ 0.8.2 (behavioral alignment for tools and prompts; not a filesystem or cache drop-in)
+**Upstream reference:** blazickjp `arxiv-mcp-server` @ 0.8.2 on PyPI (behavioral alignment for tools and prompts; not a filesystem or cache drop-in)
 
 ---
 
@@ -34,7 +34,7 @@
 
 - **For:** Developers and researchers using Cursor, Claude Code, Claude Desktop, or other MCP clients who want a fast, auditable local arXiv sidecar.
 - **Not for:** Hosted multi-tenant SaaS in v1 (architecture should not block v2).
-- **Differentiator vs other Rust arXiv MCPs ([ntapiam/arxiv-mcp](https://github.com/ntapiam/arxiv-mcp), [eric-tramel/arx](https://github.com/eric-tramel/arx)): **behavioral alignment** with blazickjp tool/prompt contracts and a published security + benchmark comparison.
+- **Differentiator vs other Rust arXiv MCPs** (e.g. `arxiv-mcp`, `arx`): behavioral alignment with blazickjp tool/prompt contracts and a published security + benchmark comparison.
 
 ### 2.3 Install and config (user-facing)
 
@@ -444,7 +444,7 @@ Publish **Security scenario matrix** (arxiv-mcp-rs vs Python upstream):
 
 ## 11. Reliability and arXiv etiquette
 
-- **User-Agent:** `arxiv-mcp-rs/{version} (https://github.com/OrenVill/arxiv-mcp-rs; research tool; mailto:CONTACT)` — contact via `--contact-email` or env.
+- **User-Agent:** `arxiv-mcp-rs/{version} (https://cursor.com/codebase/oren/arxiv-mcp-rs; research tool; mailto:CONTACT)` — contact via `--contact-email` or env.
 - **Retries:** exponential backoff on 429/503; honor `Retry-After` capped by `ARXIV_MAX_BACKOFF` (default 30s).
 - **406:** minimal retries (`ARXIV_HTTP_406_MAX_RETRIES` default 1).
 - **Connection:** timeouts connect 10s, read 30s (configurable); connection close or conservative pool (avoid stale hangs).
@@ -526,11 +526,11 @@ Targets are **measurements**, not SLAs, unless explicitly set after first run.
 
 ## 14. Release and distribution
 
-- **Install:** `cargo install arxiv-mcp-rs`; GitHub Releases: linux x86_64/aarch64, macOS arm64/x86_64, windows x86_64; SHA-256 checksums.
-- **CI:** GitHub Actions: test, clippy, fmt, `cargo deny`, release-please (or equivalent).
+- **Install:** `cargo install arxiv-mcp-rs`; release binaries: linux x86_64/aarch64, macOS arm64/x86_64, windows x86_64; SHA-256 checksums.
+- **CI:** repository workflow — test, clippy, fmt, `cargo deny` on push to `main`.
 - **License:** **Apache-2.0** with `NOTICE` crediting blazickjp/arxiv-mcp-server.
 - **README:** upstream credit, benchmark table, security matrix, config for Cursor/Claude Desktop/Claude Code, fresh-store migration note.
-- **Registry:** MCP registry listing after v0.1 stability (separate server name `io.github.OrenVill/arxiv-mcp-rs`).
+- **Registry:** MCP registry listing after v0.1 stability when a stable server id is chosen.
 
 ---
 
@@ -576,7 +576,7 @@ Targets are **measurements**, not SLAs, unless explicitly set after first run.
 
 ## 18. Upstream acknowledgment
 
-This server reimplements **documented behavior** of [arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server) by Joseph Blazick (Apache-2.0). It is an independent implementation. Thank the upstream project in README and `NOTICE`.
+This server reimplements **documented behavior** of upstream `arxiv-mcp-server` by Joseph Blazick (Apache-2.0). It is an independent implementation. Thank the upstream project in README and `NOTICE`.
 
 ---
 
