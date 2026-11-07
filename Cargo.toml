@@ -15,9 +15,9 @@ version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
 rust-version = "1.89"
-repository = "https://github.com/oren/arxiv-mcp-rs"
+repository = "https://github.com/orenvill/arxiv-mcp-rs"
 authors = ["Oren Villaret"]
-homepage = "https://github.com/oren/arxiv-mcp-rs"
+homepage = "https://github.com/orenvill/arxiv-mcp-rs"
 
 [workspace.dependencies]
 anyhow = "1.0"

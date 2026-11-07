@@ -9,7 +9,7 @@ impl Default for AllowlistedClient {
     fn default() -> Self {
         Self {
             user_agent: format!(
-                "arxiv-mcp-rs/{} (https://github.com/nexvill/arxiv-mcp-rs; research tool)",
+                "arxiv-mcp-rs/{} (https://github.com/orenvill/arxiv-mcp-rs; research tool)",
                 env!("CARGO_PKG_VERSION")
             ),
         }

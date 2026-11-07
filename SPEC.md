@@ -444,7 +444,7 @@ Publish **Security scenario matrix** (arxiv-mcp-rs vs Python upstream):
 
 ## 11. Reliability and arXiv etiquette
 
-- **User-Agent:** `arxiv-mcp-rs/{version} (https://github.com/OWNER/arxiv-mcp-rs; research tool; mailto:CONTACT)` — contact via `--contact-email` or env.
+- **User-Agent:** `arxiv-mcp-rs/{version} (https://github.com/orenvill/arxiv-mcp-rs; research tool; mailto:CONTACT)` — contact via `--contact-email` or env.
 - **Retries:** exponential backoff on 429/503; honor `Retry-After` capped by `ARXIV_MAX_BACKOFF` (default 30s).
 - **406:** minimal retries (`ARXIV_HTTP_406_MAX_RETRIES` default 1).
 - **Connection:** timeouts connect 10s, read 30s (configurable); connection close or conservative pool (avoid stale hangs).
@@ -530,7 +530,7 @@ Targets are **measurements**, not SLAs, unless explicitly set after first run.
 - **CI:** GitHub Actions: test, clippy, fmt, `cargo deny`, release-please (or equivalent).
 - **License:** **Apache-2.0** with `NOTICE` crediting blazickjp/arxiv-mcp-server.
 - **README:** upstream credit, benchmark table, security matrix, config for Cursor/Claude Desktop/Claude Code, fresh-store migration note.
-- **Registry:** MCP registry listing after v0.1 stability (separate server name `io.github.OWNER/arxiv-mcp-rs`).
+- **Registry:** MCP registry listing after v0.1 stability (separate server name `io.github.orenvill/arxiv-mcp-rs`).
 
 ---
 

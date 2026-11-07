@@ -8,12 +8,12 @@ On [github.com/new](https://github.com/new):
 
 | Field | Value |
 |-------|--------|
-| Owner | `oren` (or your org) |
+| Owner | `orenvill` |
 | Name | `arxiv-mcp-rs` |
 | Visibility | **Public** |
 | README / .gitignore / license | **None** (empty repo) |
 
-Note the clone URL, e.g. `https://github.com/oren/arxiv-mcp-rs.git`.
+Note the clone URL, e.g. `https://github.com/orenvill/arxiv-mcp-rs.git`.
 
 ## 2. Give the Cloud Agent `gh` access
 
@@ -28,7 +28,7 @@ Replace the URL if your repo name or owner differs:
 ```bash
 cd /workspace
 git remote remove github 2>/dev/null || true
-git remote add github https://github.com/oren/arxiv-mcp-rs.git
+git remote add github https://github.com/orenvill/arxiv-mcp-rs.git
 git push -u github main
 ```
 
