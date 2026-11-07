@@ -28,4 +28,5 @@ pub enum ArxivError {
 pub trait ArxivGateway: Send + Sync {
     async fn search(&self, params: &SearchParams) -> Result<AtomFeed, ArxivError>;
     async fn metadata_by_id(&self, paper_id: &str) -> Result<AtomFeed, ArxivError>;
+    async fn fetch_html(&self, paper_id: &str) -> Result<Option<Vec<u8>>, ArxivError>;
 }

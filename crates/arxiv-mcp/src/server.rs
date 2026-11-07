@@ -76,6 +76,36 @@ struct GetAbstractInput {
     paper_id: String,
 }
 
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+struct DownloadPaperToolInput {
+    paper_id: String,
+    #[serde(default)]
+    start: Option<u32>,
+    #[serde(default)]
+    max_chars: Option<u32>,
+    #[serde(default)]
+    return_full_text: Option<bool>,
+    #[serde(default)]
+    force: Option<bool>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+struct ListPapersInput {
+    #[serde(default)]
+    compact: Option<bool>,
+}
+
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+struct ReadPaperToolInput {
+    paper_id: String,
+    #[serde(default)]
+    start: Option<u32>,
+    #[serde(default)]
+    max_chars: Option<u32>,
+    #[serde(default)]
+    return_full_text: Option<bool>,
+}
+
 #[tool_router]
 impl ArxivMcpService {
     #[tool(description = "Scaffold health check.")]
@@ -122,6 +152,64 @@ impl ArxivMcpService {
         Parameters(GetAbstractInput { paper_id }): Parameters<GetAbstractInput>,
     ) -> String {
         tools::get_abstract(&self.state, paper_id).await
+    }
+
+    #[tool(
+        name = "download_paper",
+        description = "Download a paper via arXiv HTML, convert to Markdown, and return bounded text."
+    )]
+    async fn download_paper(
+        &self,
+        Parameters(input): Parameters<DownloadPaperToolInput>,
+    ) -> String {
+        tools::download_paper(
+            &self.state,
+            tools::DownloadPaperInput {
+                paper_id: input.paper_id,
+                start: input.start.unwrap_or(0) as usize,
+                max_chars: input
+                    .max_chars
+                    .map(|n| n as usize)
+                    .unwrap_or(self.state.config.default_max_chars),
+                return_full_text: input.return_full_text.unwrap_or(false),
+                force: input.force.unwrap_or(false),
+            },
+        )
+        .await
+    }
+
+    #[tool(
+        name = "list_papers",
+        description = "List papers stored in the local v1 store."
+    )]
+    async fn list_papers(
+        &self,
+        Parameters(ListPapersInput { compact }): Parameters<ListPapersInput>,
+    ) -> String {
+        tools::list_papers(&self.state, compact.unwrap_or(false)).await
+    }
+
+    #[tool(
+        name = "read_paper",
+        description = "Read stored Markdown for a downloaded paper with pagination."
+    )]
+    async fn read_paper(
+        &self,
+        Parameters(input): Parameters<ReadPaperToolInput>,
+    ) -> String {
+        tools::read_paper(
+            &self.state,
+            tools::ReadPaperInput {
+                paper_id: input.paper_id,
+                start: input.start.unwrap_or(0) as usize,
+                max_chars: input
+                    .max_chars
+                    .map(|n| n as usize)
+                    .unwrap_or(self.state.config.default_max_chars),
+                return_full_text: input.return_full_text.unwrap_or(false),
+            },
+        )
+        .await
     }
 }
 

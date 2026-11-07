@@ -6,6 +6,7 @@ use arxiv_core::{
 };
 
 #[test]
+#[allow(clippy::assertions_on_constants)]
 fn manifest_flag_always_untrusted() {
     assert!(MANIFEST_UNTRUSTED);
 }

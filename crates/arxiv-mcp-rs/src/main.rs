@@ -3,7 +3,8 @@ use std::path::PathBuf;
 
 use anyhow::Context;
 use arxiv_core::{legacy_flat_store_detected, legacy_python_storage_path, Config};
-use arxiv_mcp::{run_http, run_stdio, AppState};
+use arxiv_convert::CONVERTER_VERSION;
+use arxiv_mcp::{download_paper, run_http, run_stdio, AppState, DownloadPaperInput};
 use arxiv_store::StoreBackend;
 use clap::{Parser, Subcommand, ValueEnum};
 use tracing_subscriber::EnvFilter;
@@ -38,6 +39,14 @@ enum Commands {
     },
     /// Local smoke checks (expanded in SPEC milestone M1).
     Check {
+        #[arg(long, env = "ARXIV_STORAGE_PATH")]
+        storage_path: Option<PathBuf>,
+    },
+    /// Debug download (HTML → Markdown pipeline).
+    Fetch {
+        paper_id: String,
+        #[arg(long)]
+        force: bool,
         #[arg(long, env = "ARXIV_STORAGE_PATH")]
         storage_path: Option<PathBuf>,
     },
@@ -76,6 +85,32 @@ async fn main() -> anyhow::Result<()> {
                     run_http(state, addr).await
                 }
             }
+        }
+        Commands::Fetch {
+            paper_id,
+            force,
+            storage_path,
+        } => {
+            let mut config = Config::default();
+            if let Some(path) = storage_path {
+                config.storage_path = path;
+            }
+            let state = AppState::new(config)?;
+            state.store.ensure_root().await?;
+            tracing::info!(converter_version = CONVERTER_VERSION, %paper_id, "fetch via HTML pipeline");
+            let json = download_paper(
+                &state,
+                DownloadPaperInput {
+                    paper_id,
+                    start: 0,
+                    max_chars: state.config.default_max_chars,
+                    return_full_text: false,
+                    force,
+                },
+            )
+            .await;
+            println!("{json}");
+            Ok(())
         }
         Commands::Check { storage_path } => {
             let mut config = Config::default();

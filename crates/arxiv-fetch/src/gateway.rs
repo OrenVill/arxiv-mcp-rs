@@ -1,6 +1,6 @@
 use arxiv_core::{
     parse_atom_feed, ArxivError, ArxivGateway, ArxivRateLimiter, SearchParams, SearchQueryError,
-    build_id_list_url, build_search_url,
+    build_html_url, build_id_list_url, build_search_url,
 };
 use async_trait::async_trait;
 use reqwest::StatusCode;
@@ -9,6 +9,13 @@ use crate::allowlist::AllowlistedClient;
 use crate::client::{AllowlistedHttp, FetchError};
 
 const DEFAULT_RETRY_AFTER: u64 = 60;
+
+fn max_html_bytes() -> usize {
+    std::env::var("MAX_HTML_BYTES")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(16 * 1024 * 1024)
+}
 
 pub struct ProcessArxivGateway {
     http: AllowlistedHttp,
@@ -70,6 +77,41 @@ impl ArxivGateway for ProcessArxivGateway {
         let url = build_id_list_url(paper_id);
         let xml = self.fetch_atom(url).await?;
         parse_atom_feed(&xml).map_err(ArxivError::from)
+    }
+
+    async fn fetch_html(&self, paper_id: &str) -> Result<Option<Vec<u8>>, ArxivError> {
+        let url = build_html_url(paper_id);
+        let max_bytes = max_html_bytes();
+        self.gate
+            .run(async {
+                match self.http.get_bytes(&url, max_bytes).await {
+                    Ok((_status, bytes)) if bytes.is_empty() => Ok(None),
+                    Ok((_status, bytes)) => Ok(Some(bytes)),
+                    Err(FetchError::Http(status)) if status == StatusCode::NOT_FOUND => Ok(None),
+                    Err(FetchError::Http(status)) if status == StatusCode::TOO_MANY_REQUESTS => {
+                        Err(ArxivError::RateLimited {
+                            retry_after_seconds: DEFAULT_RETRY_AFTER,
+                            http_status: status.as_u16(),
+                            message: "arXiv is rate limiting this IP (HTTP 429). Please wait before retrying.".into(),
+                        })
+                    }
+                    Err(FetchError::Http(status))
+                        if status == StatusCode::SERVICE_UNAVAILABLE =>
+                    {
+                        Err(ArxivError::RateLimited {
+                            retry_after_seconds: DEFAULT_RETRY_AFTER,
+                            http_status: status.as_u16(),
+                            message: "arXiv service unavailable (HTTP 503). Please wait before retrying.".into(),
+                        })
+                    }
+                    Err(FetchError::Http(status)) => Err(ArxivError::Http {
+                        status: status.as_u16(),
+                    }),
+                    Err(FetchError::BlockedRedirect) => Err(ArxivError::BlockedRedirect),
+                    Err(FetchError::Network(e)) => Err(ArxivError::Network(e)),
+                }
+            })
+            .await
     }
 }
 

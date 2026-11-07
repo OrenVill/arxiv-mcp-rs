@@ -5,6 +5,7 @@ use arxiv_fetch::{AllowlistedClient, ProcessArxivGateway};
 use arxiv_store::LocalFsStore;
 
 use crate::cache::MemorySearchCache;
+use crate::in_flight::InFlightDownloads;
 
 /// Immutable, shareable process state (stateless handlers; no per-client fields).
 #[derive(Clone)]
@@ -13,6 +14,7 @@ pub struct AppState {
     pub store: Arc<LocalFsStore>,
     pub gateway: Arc<dyn ArxivGateway>,
     pub cache: Arc<dyn SearchCache>,
+    pub in_flight: InFlightDownloads,
 }
 
 impl AppState {
@@ -25,6 +27,7 @@ impl AppState {
             store: Arc::new(store),
             gateway: Arc::new(gateway),
             cache: Arc::new(MemorySearchCache::new()),
+            in_flight: InFlightDownloads::new(),
         })
     }
 }

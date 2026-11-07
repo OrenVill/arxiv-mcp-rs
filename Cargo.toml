@@ -37,6 +37,7 @@ scraper = "0.23"
 lopdf = "0.35"
 pdf-extract = "0.8"
 unicode-normalization = "0.1"
+dashmap = "6.1"
 rmcp = { version = "3.9", features = [
     "server",
     "macros",

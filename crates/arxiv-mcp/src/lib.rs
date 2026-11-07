@@ -1,4 +1,5 @@
 mod cache;
+mod in_flight;
 mod prompts;
 mod server;
 mod state;
@@ -9,3 +10,4 @@ pub use prompts::{
 };
 pub use server::{run_http, run_stdio};
 pub use state::AppState;
+pub use tools::{download_paper, DownloadPaperInput};

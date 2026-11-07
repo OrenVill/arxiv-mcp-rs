@@ -13,6 +13,7 @@ name = "arxiv-mcp-rs"
 path = "src/main.rs"
 
 [dependencies]
+arxiv-convert = { path = "../arxiv-convert" }
 arxiv-core = { path = "../arxiv-core" }
 arxiv-mcp = { path = "../arxiv-mcp" }
 arxiv-store = { path = "../arxiv-store" }

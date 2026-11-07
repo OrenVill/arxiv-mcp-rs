@@ -1,3 +1,9 @@
+mod papers;
+
+pub use papers::{
+    download_paper, list_papers, read_paper, DownloadPaperInput, ReadPaperInput,
+};
+
 use std::sync::Arc;
 
 use arxiv_core::{
@@ -234,6 +240,10 @@ mod tests {
             ))
             .map_err(ArxivError::Parse)
         }
+
+        async fn fetch_html(&self, _paper_id: &str) -> Result<Option<Vec<u8>>, ArxivError> {
+            Ok(None)
+        }
     }
 
     #[tokio::test]
@@ -268,6 +278,10 @@ mod tests {
 
         async fn metadata_by_id(&self, _paper_id: &str) -> Result<AtomFeed, ArxivError> {
             panic!("metadata must not run for invalid paper_id");
+        }
+
+        async fn fetch_html(&self, _paper_id: &str) -> Result<Option<Vec<u8>>, ArxivError> {
+            panic!("fetch_html must not run for invalid paper_id");
         }
     }
 

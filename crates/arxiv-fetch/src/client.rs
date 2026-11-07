@@ -59,6 +59,50 @@ impl AllowlistedHttp {
         })
     }
 
+    pub async fn get_bytes(
+        &self,
+        start_url: &str,
+        max_bytes: usize,
+    ) -> Result<(StatusCode, Vec<u8>), FetchError> {
+        let mut url = Url::parse(start_url).map_err(|e| FetchError::Network(e.to_string()))?;
+        validate_https_allowlisted(&url)?;
+
+        for _ in 0..=MAX_REDIRECTS {
+            let response = self
+                .client
+                .get(url.clone())
+                .header(reqwest::header::USER_AGENT, &self.user_agent)
+                .send()
+                .await
+                .map_err(|e| FetchError::Network(e.to_string()))?;
+            if response.status().is_redirection() {
+                let Some(location) = response.headers().get(reqwest::header::LOCATION) else {
+                    return Err(FetchError::Http(response.status()));
+                };
+                let location = location
+                    .to_str()
+                    .map_err(|_| FetchError::BlockedRedirect)?;
+                url = resolve_redirect(&url, location)?;
+                continue;
+            }
+            let status = response.status();
+            if status.is_success() {
+                let bytes = response
+                    .bytes()
+                    .await
+                    .map_err(|e| FetchError::Network(e.to_string()))?;
+                if bytes.len() > max_bytes {
+                    return Err(FetchError::Network(format!(
+                        "response exceeds max {max_bytes} bytes"
+                    )));
+                }
+                return Ok((status, bytes.to_vec()));
+            }
+            return Err(FetchError::Http(status));
+        }
+        Err(FetchError::BlockedRedirect)
+    }
+
     pub async fn get_text(&self, start_url: &str) -> Result<(StatusCode, String), FetchError> {
         let mut url = Url::parse(start_url).map_err(|e| FetchError::Network(e.to_string()))?;
         validate_https_allowlisted(&url)?;

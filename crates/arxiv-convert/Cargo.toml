@@ -13,3 +13,4 @@ anyhow.workspace = true
 lopdf.workspace = true
 pdf-extract.workspace = true
 scraper.workspace = true
+thiserror.workspace = true
