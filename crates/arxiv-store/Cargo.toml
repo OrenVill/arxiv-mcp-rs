@@ -1,0 +1,17 @@
+[package]
+name = "arxiv-store"
+description = "Store v1 layout and StoreBackend trait"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+arxiv-core = { path = "../arxiv-core" }
+async-trait = "0.1"
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true

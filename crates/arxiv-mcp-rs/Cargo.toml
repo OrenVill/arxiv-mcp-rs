@@ -1,0 +1,23 @@
+[package]
+name = "arxiv-mcp-rs"
+description = "Stateless arXiv MCP server (stdio + Streamable HTTP)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "arxiv-mcp-rs"
+path = "src/main.rs"
+
+[dependencies]
+arxiv-core = { path = "../arxiv-core" }
+arxiv-mcp = { path = "../arxiv-mcp" }
+arxiv-store = { path = "../arxiv-store" }
+anyhow.workspace = true
+clap.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true

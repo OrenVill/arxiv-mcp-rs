@@ -1,0 +1,8 @@
+arxiv-mcp-rs
+Copyright 2026 nexvill
+
+This product reimplements documented behavior of arxiv-mcp-server
+(https://github.com/blazickjp/arxiv-mcp-server) by Joseph Blazick.
+See SPEC.md and README.md for scope and attribution.
+
+Licensed under the Apache License, Version 2.0.
