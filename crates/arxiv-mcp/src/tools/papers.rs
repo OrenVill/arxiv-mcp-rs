@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use arxiv_convert::{html_to_markdown, CONVERTER_VERSION};
+use arxiv_convert::{html_to_markdown, pdf_to_markdown, ConvertError, CONVERTER_VERSION};
 use arxiv_core::{
     content_warning_for_chunk, paginate_content, ArxivError, ArxivId, ContentPage,
 };
@@ -107,29 +107,24 @@ async fn perform_download(state: AppState, id: ArxivId, _force: bool) -> Result<
             .ok_or_else(|| "Paper not found on arXiv".to_string())?;
 
         let html_id = id.html_path_id();
-        let html = state
-            .gateway
-            .fetch_html(&html_id)
-            .await
-            .map_err(download_error)?;
+        let pdf_id = id.versioned_id();
 
-        let Some(html_bytes) = html else {
-            return Err(
-                "No HTML version available for this paper (PDF fallback ships in M5). \
-Try another ID or wait for PDF support."
-                    .into(),
-            );
+        let (markdown, fetched_via) = match state.gateway.fetch_html(&html_id).await {
+            Ok(Some(html_bytes)) => match html_to_markdown(&html_bytes) {
+                Ok(md) => (md, FetchedVia::Html),
+                Err(ConvertError::Empty) => fetch_pdf_markdown(&state, &pdf_id).await?,
+                Err(e) => return Err(format!("HTML conversion failed: {e}")),
+            },
+            Ok(None) => fetch_pdf_markdown(&state, &pdf_id).await?,
+            Err(e) => return Err(download_error(e)),
         };
-
-        let markdown = html_to_markdown(&html_bytes)
-            .map_err(|e| format!("HTML conversion failed: {e}"))?;
 
         let mut manifest = ManifestV1::new(&bare_key);
         manifest.title = Some(paper.title.clone());
         manifest.authors = paper.authors.clone();
         manifest.published = Some(paper.published.clone());
         manifest.converter_version = CONVERTER_VERSION;
-        manifest.fetched_via = FetchedVia::Html;
+        manifest.fetched_via = fetched_via;
         manifest.fetched_at = Utc::now().to_rfc3339();
         manifest.arxiv_version = id.arxiv_version();
         manifest.versioned_id = Some(id.versioned_id());
@@ -150,6 +145,19 @@ Try another ID or wait for PDF support."
     })
     .await
     .map_err(|_| format!("download timed out after {}s", deadline.as_secs()))?
+}
+
+async fn fetch_pdf_markdown(
+    state: &AppState,
+    pdf_id: &str,
+) -> Result<(String, FetchedVia), String> {
+    let pdf_bytes = state
+        .gateway
+        .fetch_pdf(pdf_id)
+        .await
+        .map_err(download_error)?;
+    let markdown = pdf_to_markdown(&pdf_bytes).map_err(|e| format!("PDF conversion failed: {e}"))?;
+    Ok((markdown, FetchedVia::Pdf))
 }
 
 fn download_error(err: ArxivError) -> String {
@@ -289,7 +297,8 @@ mod tests {
     use crate::in_flight::InFlightDownloads;
 
     struct HtmlGateway {
-        html: Vec<u8>,
+        html: Option<Vec<u8>>,
+        pdf: Vec<u8>,
     }
 
     #[async_trait]
@@ -309,7 +318,11 @@ mod tests {
         }
 
         async fn fetch_html(&self, _paper_id: &str) -> Result<Option<Vec<u8>>, ArxivError> {
-            Ok(Some(self.html.clone()))
+            Ok(self.html.clone())
+        }
+
+        async fn fetch_pdf(&self, _paper_id: &str) -> Result<Vec<u8>, ArxivError> {
+            Ok(self.pdf.clone())
         }
     }
 
@@ -337,7 +350,8 @@ mod tests {
         let store = LocalFsStore::new(config.storage_path.clone());
         store.ensure_root().await.unwrap();
         let gateway: Arc<dyn ArxivGateway> = Arc::new(HtmlGateway {
-            html: sample_html(),
+            html: Some(sample_html()),
+            pdf: include_bytes!("../../../../tests/golden/fixtures/minimal.pdf").to_vec(),
         });
         let state = test_state(gateway, store);
 
@@ -366,5 +380,43 @@ mod tests {
         )
         .await;
         assert!(read.contains("Body text"));
+    }
+
+    #[tokio::test]
+    async fn download_falls_back_to_pdf_when_html_missing() {
+        let dir = tempdir().unwrap();
+        let config = arxiv_core::Config {
+            storage_path: dir.path().to_path_buf(),
+            ..Default::default()
+        };
+        let store = LocalFsStore::new(config.storage_path.clone());
+        store.ensure_root().await.unwrap();
+        let gateway: Arc<dyn ArxivGateway> = Arc::new(HtmlGateway {
+            html: None,
+            pdf: include_bytes!("../../../../tests/golden/fixtures/minimal.pdf").to_vec(),
+        });
+        let state = test_state(gateway, store);
+
+        let dl = download_paper(
+            &state,
+            DownloadPaperInput {
+                paper_id: "2404.19756".into(),
+                start: 0,
+                max_chars: 500,
+                return_full_text: false,
+                force: false,
+            },
+        )
+        .await;
+        assert!(dl.contains("\"status\": \"success\""));
+        assert!(dl.contains("\"fetched_via\": \"pdf\""));
+        assert!(dl.to_lowercase().contains("hello"));
+
+        let stored = state
+            .store
+            .read_paper(&ArxivId::parse("2404.19756").unwrap())
+            .await
+            .unwrap();
+        assert_eq!(stored.manifest.fetched_via, FetchedVia::Pdf);
     }
 }

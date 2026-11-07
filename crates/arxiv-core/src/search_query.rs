@@ -125,6 +125,10 @@ pub fn build_html_url(paper_id: &str) -> String {
     format!("https://arxiv.org/html/{paper_id}")
 }
 
+pub fn build_pdf_url(paper_id: &str) -> String {
+    format!("https://arxiv.org/pdf/{paper_id}.pdf")
+}
+
 pub fn build_id_list_url(paper_id: &str) -> String {
     format!("{ARXIV_API_URL}?id_list={paper_id}&max_results=1")
 }

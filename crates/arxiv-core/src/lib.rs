@@ -27,6 +27,7 @@ pub use policy::{
 };
 pub use rate::ArxivRateLimiter;
 pub use search_query::{
-    build_html_url, build_id_list_url, build_search_url, validate_categories, AbstractMode,
+    build_html_url, build_id_list_url, build_pdf_url, build_search_url, validate_categories,
+    AbstractMode,
     SearchParams, SearchQueryError, SortBy,
 };
