@@ -244,6 +244,10 @@ mod tests {
         async fn fetch_html(&self, _paper_id: &str) -> Result<Option<Vec<u8>>, ArxivError> {
             Ok(None)
         }
+
+        async fn fetch_pdf(&self, _paper_id: &str) -> Result<Vec<u8>, ArxivError> {
+            Err(ArxivError::Http { status: 404 })
+        }
     }
 
     #[tokio::test]
@@ -282,6 +286,10 @@ mod tests {
 
         async fn fetch_html(&self, _paper_id: &str) -> Result<Option<Vec<u8>>, ArxivError> {
             panic!("fetch_html must not run for invalid paper_id");
+        }
+
+        async fn fetch_pdf(&self, _paper_id: &str) -> Result<Vec<u8>, ArxivError> {
+            panic!("fetch_pdf must not run for invalid paper_id");
         }
     }
 

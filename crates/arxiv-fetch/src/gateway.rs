@@ -1,6 +1,6 @@
 use arxiv_core::{
     parse_atom_feed, ArxivError, ArxivGateway, ArxivRateLimiter, SearchParams, SearchQueryError,
-    build_html_url, build_id_list_url, build_search_url,
+    build_html_url, build_id_list_url, build_pdf_url, build_search_url,
 };
 use async_trait::async_trait;
 use reqwest::StatusCode;
@@ -15,6 +15,13 @@ fn max_html_bytes() -> usize {
         .ok()
         .and_then(|s| s.parse().ok())
         .unwrap_or(16 * 1024 * 1024)
+}
+
+fn max_pdf_bytes() -> usize {
+    std::env::var("MAX_PDF_BYTES")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(32 * 1024 * 1024)
 }
 
 pub struct ProcessArxivGateway {
@@ -108,6 +115,52 @@ impl ArxivGateway for ProcessArxivGateway {
                         status: status.as_u16(),
                     }),
                     Err(FetchError::BlockedRedirect) => Err(ArxivError::BlockedRedirect),
+                    Err(FetchError::Network(e)) => Err(ArxivError::Network(e)),
+                }
+            })
+            .await
+    }
+
+    async fn fetch_pdf(&self, paper_id: &str) -> Result<Vec<u8>, ArxivError> {
+        let url = build_pdf_url(paper_id);
+        let max_bytes = max_pdf_bytes();
+        self.gate
+            .run(async {
+                match self.http.get_bytes(&url, max_bytes).await {
+                    Ok((_status, bytes)) if bytes.is_empty() => Err(ArxivError::Http {
+                        status: 404,
+                    }),
+                    Ok((_status, bytes)) => Ok(bytes),
+                    Err(FetchError::Http(status)) if status == StatusCode::NOT_FOUND => {
+                        Err(ArxivError::Http {
+                            status: status.as_u16(),
+                        })
+                    }
+                    Err(FetchError::Http(status)) if status == StatusCode::TOO_MANY_REQUESTS => {
+                        Err(ArxivError::RateLimited {
+                            retry_after_seconds: DEFAULT_RETRY_AFTER,
+                            http_status: status.as_u16(),
+                            message: "arXiv is rate limiting this IP (HTTP 429). Please wait before retrying.".into(),
+                        })
+                    }
+                    Err(FetchError::Http(status))
+                        if status == StatusCode::SERVICE_UNAVAILABLE =>
+                    {
+                        Err(ArxivError::RateLimited {
+                            retry_after_seconds: DEFAULT_RETRY_AFTER,
+                            http_status: status.as_u16(),
+                            message: "arXiv service unavailable (HTTP 503). Please wait before retrying.".into(),
+                        })
+                    }
+                    Err(FetchError::Http(status)) => Err(ArxivError::Http {
+                        status: status.as_u16(),
+                    }),
+                    Err(FetchError::BlockedRedirect) => Err(ArxivError::BlockedRedirect),
+                    Err(FetchError::Network(e)) if e.contains("exceeds max") => {
+                        Err(ArxivError::Query(format!(
+                            "PDF download exceeds size cap ({max_bytes} bytes)"
+                        )))
+                    }
                     Err(FetchError::Network(e)) => Err(ArxivError::Network(e)),
                 }
             })
