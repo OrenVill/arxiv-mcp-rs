@@ -24,7 +24,7 @@ pub fn default_storage_path() -> PathBuf {
     dirs_home().join(".arxiv-mcp-rs").join("papers")
 }
 
-fn dirs_home() -> PathBuf {
+pub(crate) fn dirs_home() -> PathBuf {
     std::env::var_os("HOME")
         .or_else(|| std::env::var_os("USERPROFILE"))
         .map(PathBuf::from)

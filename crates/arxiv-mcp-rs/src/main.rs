@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 
 use anyhow::Context;
-use arxiv_core::Config;
+use arxiv_core::{legacy_flat_store_detected, legacy_python_storage_path, Config};
 use arxiv_mcp::{run_http, run_stdio, AppState};
 use arxiv_store::StoreBackend;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -86,7 +86,21 @@ async fn main() -> anyhow::Result<()> {
             state.store.ensure_root().await?;
             tracing::info!(root = %state.store.root().display(), "store ok");
             tracing::info!("check: allowlist hosts export.arxiv.org, arxiv.org, www.arxiv.org");
+            warn_if_legacy_python_store();
             Ok(())
         }
     }
+}
+
+/// D2: legacy Python cache is never mounted or migrated automatically.
+fn warn_if_legacy_python_store() {
+    let legacy = legacy_python_storage_path();
+    if !legacy_flat_store_detected(&legacy) {
+        return;
+    }
+    tracing::warn!(
+        path = %legacy.display(),
+        "detected blazickjp/arxiv-mcp-server flat cache (D2: not read or migrated); \
+         use store v1 at ~/.arxiv-mcp-rs/papers and download_paper to repopulate"
+    );
 }

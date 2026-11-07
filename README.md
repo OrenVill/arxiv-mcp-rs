@@ -44,7 +44,7 @@ TRANSPORT=http PORT=8000 cargo run -- serve --transport http --host 127.0.0.1 --
 }
 ```
 
-Default store: `~/.arxiv-mcp-rs/papers` (fresh layout; does not read Python `~/.arxiv-mcp-server/papers`).
+Default store: `~/.arxiv-mcp-rs/papers` (**D2:** does not read or migrate Python `~/.arxiv-mcp-server/papers`; `check` warns if legacy cache exists).
 
 ## Crate layout
 

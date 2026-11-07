@@ -76,7 +76,7 @@ Optional: ship a symlink or secondary binary named `arxiv-mcp-server` for users 
 | Item | Notes |
 |------|--------|
 | **Default storage path** | `~/.arxiv-mcp-rs/papers` (or XDG data dir)—**not** `~/.arxiv-mcp-server/papers`. |
-| **On-disk layout** | Store v1 schema (§7); no read of upstream flat `{stem}.md` + `{stem}.meta.json`. |
+| **On-disk layout** | Store v1 schema (§7); **D2:** never read upstream flat `{stem}.md` + `{stem}.meta.json` (see Appendix C). |
 | **Remaining 14 upstream tools** | LaTeX, sections, citation graph, watches, semantic search, etc.—out of scope v1. Clients calling them receive a clear `unknown tool` MCP error. |
 | **`ARXIV_STORAGE_PATH`** | Upstream does not define this env var; v1 may add it as an **extension** alongside `--storage-path`. |
 | **Streamable HTTP session stickiness** | Upstream may keep session state in its HTTP manager; this server uses **stateless** HTTP mode—clients must not assume in-process affinity beyond MCP protocol rules. |
@@ -102,7 +102,7 @@ Before tagging v0.1:
 - OCR for scanned PDFs.
 - Hosted or multi-user mode (auth, tenancy, per-user quotas).
 - Write or annotate operations toward arXiv (read-only toward upstream).
-- Migration from Python cache (optional `migrate` subcommand deferred to v1.1+).
+- Import or migration from the Python `arxiv-mcp-server` on-disk layout (D2).
 - MCP resources surface (unless required by SDK defaults; no custom resources v1).
 
 ---
@@ -568,7 +568,7 @@ Targets are **measurements**, not SLAs, unless explicitly set after first run.
 | ID | Decision | Resolution |
 |----|----------|------------|
 | D1 | Binary name | `arxiv-mcp-rs` primary; optional `arxiv-mcp-server` alias in release tarball |
-| D2 | Store migration | v1: no migration; v1.1: evaluate `migrate from-legacy` |
+| D2 | Legacy Python store | **v1 resolved:** No automatic read, mount, or `migrate` from `~/.arxiv-mcp-server/papers`. Only store v1 (§7). `arxiv-mcp-rs check` **warns** if a flat legacy cache is present. Repopulate via `download_paper`. |
 | D3 | PDF engine | **v1:** `pdf-extract` + `lopdf` (§9.6); HTML-first unchanged |
 | D4 | HTTP in v1 | **Yes** — Streamable HTTP + `/healthz`, stateless mode (§9.5, §12.3) |
 
@@ -615,6 +615,19 @@ For client compatibility documentation:
 | `PORT` | HTTP bind port |
 | `ALLOWED_HOSTS` | Extra HTTP Host values (comma-separated) |
 | `ALLOWED_ORIGINS` | Extra HTTP Origin values (comma-separated) |
+
+---
+
+## Appendix C — Legacy Python store (D2, reference only)
+
+blazickjp/arxiv-mcp-server (≤0.8.2) uses a **flat** directory under `~/.arxiv-mcp-server/papers`:
+
+- `{filesystem_stem}.md` — markdown body
+- `{filesystem_stem}.meta.json` — `extractor_version`, `arxiv_version`, metadata
+
+Legacy slash IDs encode `/` as `__` in the filename stem.
+
+**arxiv-mcp-rs does not open these files.** Reasons: different manifest schema (§7), security validation path, and converter versioning. Switching tools means a **new** `--storage-path` (default `~/.arxiv-mcp-rs/papers`) and re-downloading papers.
 
 ---
 
