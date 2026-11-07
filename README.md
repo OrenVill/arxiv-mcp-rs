@@ -57,6 +57,10 @@ Default store: `~/.arxiv-mcp-rs/papers` (**D2:** does not read or migrate Python
 | `arxiv-fetch` | Allowlisted HTTP (WIP) |
 | `arxiv-convert` | HTML/PDF → Markdown (WIP) |
 
+## GitHub
+
+Public repo setup (you create empty repo, then push): [docs/GITHUB.md](./docs/GITHUB.md).
+
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md): work on `main` or normal feature branches—no `cursor/` prefixes; no agent co-authors on commits.
