@@ -13,5 +13,9 @@ arxiv-core = { path = "../arxiv-core" }
 async-trait = "0.1"
 serde.workspace = true
 serde_json.workspace = true
+sha2 = "0.10"
 thiserror.workspace = true
-tokio.workspace = true
+tokio = { workspace = true, features = ["sync", "io-util"] }
+
+[dev-dependencies]
+tempfile = "3"

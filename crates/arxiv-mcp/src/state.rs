@@ -12,7 +12,8 @@ pub struct AppState {
 
 impl AppState {
     pub fn new(config: Config) -> Self {
-        let store = LocalFsStore::new(config.storage_path.clone());
+        let store = LocalFsStore::new(config.storage_path.clone())
+            .with_quota_mb(config.quota_mb);
         Self {
             config: Arc::new(config),
             store: Arc::new(store),
