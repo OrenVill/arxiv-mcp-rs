@@ -121,6 +121,10 @@ pub fn build_search_url(params: &SearchParams) -> Result<String, SearchQueryErro
     ))
 }
 
+pub fn build_html_url(paper_id: &str) -> String {
+    format!("https://arxiv.org/html/{paper_id}")
+}
+
 pub fn build_id_list_url(paper_id: &str) -> String {
     format!("{ARXIV_API_URL}?id_list={paper_id}&max_results=1")
 }

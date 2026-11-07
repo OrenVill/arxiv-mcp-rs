@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use arxiv_core::{
-    paper_to_json_map, ArxivError, ArxivGateway, ArxivId, CachedAtom, CacheKey,
-    CONTENT_WARNING, SearchCache, SearchParams, SortBy, validate_categories, AbstractMode,
+    paper_to_json_map, sanitize_returned_text, strict_sanitize_from_env, ArxivError, ArxivGateway,
+    ArxivId, CachedAtom, CacheKey, CONTENT_WARNING, SearchCache, SearchParams, SortBy,
+    validate_categories, AbstractMode,
 };
 use serde::Serialize;
 use serde_json::json;
@@ -153,7 +154,7 @@ fn abstract_success(paper_id: &str, feed: arxiv_core::AtomFeed) -> String {
         "title": paper.title,
         "authors": paper.authors,
         "content_warning": CONTENT_WARNING,
-        "abstract": paper.abstract_text,
+        "abstract": sanitize_returned_text(&paper.abstract_text, strict_sanitize_from_env()).text,
         "categories": paper.categories,
         "published": paper.published,
         "pdf_url": paper.url,
@@ -255,5 +256,36 @@ mod tests {
         assert!(text.contains(CONTENT_WARNING));
         let again = search_papers_with_gateway(gateway, cache, params).await;
         assert_eq!(text, again);
+    }
+
+    struct NoNetworkGateway;
+
+    #[async_trait]
+    impl ArxivGateway for NoNetworkGateway {
+        async fn search(&self, _params: &SearchParams) -> Result<AtomFeed, ArxivError> {
+            panic!("search must not run for invalid paper_id");
+        }
+
+        async fn metadata_by_id(&self, _paper_id: &str) -> Result<AtomFeed, ArxivError> {
+            panic!("metadata must not run for invalid paper_id");
+        }
+    }
+
+    #[tokio::test]
+    async fn get_abstract_rejects_path_traversal_before_network() {
+        let gateway: Arc<dyn ArxivGateway> = Arc::new(NoNetworkGateway);
+        let cache: Arc<dyn SearchCache> = Arc::new(MemorySearchCache::new());
+        let body =
+            get_abstract_with_gateway(gateway, cache, "../../../etc/passwd".into()).await;
+        assert!(body.contains("\"status\": \"error\""));
+        assert!(body.contains("invalid arXiv ID"));
+    }
+
+    #[tokio::test]
+    async fn get_abstract_rejects_url_paper_id_before_network() {
+        let gateway: Arc<dyn ArxivGateway> = Arc::new(NoNetworkGateway);
+        let cache: Arc<dyn SearchCache> = Arc::new(MemorySearchCache::new());
+        let body = get_abstract_with_gateway(gateway, cache, "https://evil.com/x".into()).await;
+        assert!(body.contains("invalid arXiv ID"));
     }
 }

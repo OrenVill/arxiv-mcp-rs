@@ -29,6 +29,12 @@ impl ArxivId {
         if trimmed.contains("..") || trimmed.contains('\\') || trimmed.contains("://") {
             return Err(ParseIdError::Invalid(trimmed.to_string()));
         }
+        if trimmed
+            .chars()
+            .any(|c| c.is_control() && !matches!(c, '\t' | '\n' | '\r'))
+        {
+            return Err(ParseIdError::Invalid(trimmed.to_string()));
+        }
 
         let bare = strip_version_suffix(trimmed);
         if is_new_style(bare) || is_legacy_style(bare) {
@@ -44,6 +50,26 @@ impl ArxivId {
 
     pub fn filesystem_stem(&self) -> String {
         self.bare_id().replace('/', "__")
+    }
+
+    pub fn arxiv_version(&self) -> Option<String> {
+        let bare = strip_version_suffix(&self.0);
+        if bare.len() < self.0.len() {
+            Some(self.0[bare.len()..].to_string())
+        } else {
+            None
+        }
+    }
+
+    pub fn versioned_id(&self) -> String {
+        match self.arxiv_version() {
+            Some(ver) => format!("{}{ver}", self.bare_id()),
+            None => self.bare_id(),
+        }
+    }
+
+    pub fn html_path_id(&self) -> String {
+        self.versioned_id()
     }
 }
 

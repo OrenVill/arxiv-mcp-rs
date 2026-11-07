@@ -124,6 +124,7 @@ dependencies = [
  "tempfile",
  "thiserror",
  "tokio",
+ "unicode-normalization",
  "urlencoding",
 ]
 
