@@ -1,7 +1,7 @@
 # arxiv-mcp-rs — Technical Specification
 
 **Version:** 0.1-draft  
-**Date:** 2025-11-07  
+**Date:** 2026-11-07  
 **Status:** Pre-implementation  
 **Upstream reference:** [blazickjp/arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server) @ 0.8.2 (behavioral alignment for tools and prompts; not a filesystem or cache drop-in)
 
