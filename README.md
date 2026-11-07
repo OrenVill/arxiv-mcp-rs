@@ -14,12 +14,12 @@ Stateless Rust MCP server for arXiv literature work: upstream-aligned **tools an
 | **M2** | `StoreBackend` v1 — manifest layout, atomic writes, optional `--quota-mb` | **Done** |
 | **M3** | `search_papers`, `get_abstract`, Atom fixtures, in-memory cache, tool `inputSchema` contracts | **Done** |
 | **M4** | `download_paper` (HTML), `list_papers`, `read_paper`, in-flight dedup | **Done** |
-| **M5** | PDF fallback + golden Markdown vs upstream | **In progress** — `pdf` module stub; HTML-only download today; PDF wiring pending |
+| **M5** | PDF fallback + golden Markdown vs upstream | **Done** — HTML-first `download_paper`; PDF fallback; golden fixture under `tests/golden/` |
 | **M6** | Seven upstream prompts + SHA-256 snapshot tests | **Done** |
 | **M7** | Security scenario suite + untrusted content policy | **Done** |
 | **M8** | Benchmarks, README, v0.1.0 release | **This branch** |
 
-v0.1.0 targets full M5 before tag.
+v0.1.0 tag is next after release checklist (CI workflow on GitHub when `workflow` scope is available).
 
 ## Security scenario matrix (summary)
 
