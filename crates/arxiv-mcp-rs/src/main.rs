@@ -64,7 +64,7 @@ async fn main() -> anyhow::Result<()> {
                 config.storage_path = path;
             }
             config.contact_email = contact_email;
-            let state = AppState::new(config);
+            let state = AppState::new(config)?;
             state.store.ensure_root().await?;
 
             match transport {
@@ -82,7 +82,7 @@ async fn main() -> anyhow::Result<()> {
             if let Some(path) = storage_path {
                 config.storage_path = path;
             }
-            let state = AppState::new(config);
+            let state = AppState::new(config)?;
             state.store.ensure_root().await?;
             tracing::info!(root = %state.store.root().display(), "store ok");
             tracing::info!("check: allowlist hosts export.arxiv.org, arxiv.org, www.arxiv.org");
