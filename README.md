@@ -2,6 +2,8 @@
 
 Stateless Rust MCP server for arXiv literature work: upstream-aligned **tools and prompts** (per [SPEC.md](./SPEC.md)), fresh on-disk store, **stdio + Streamable HTTP** in v1, built-in PDF path (`pdf-extract` + `lopdf`).
 
+**Repository:** https://github.com/OrenVill/arxiv-mcp-rs
+
 **Upstream inspiration:** [blazickjp/arxiv-mcp-server](https://github.com/blazickjp/arxiv-mcp-server) (behavioral reference; not a cache drop-in).
 
 ## Status

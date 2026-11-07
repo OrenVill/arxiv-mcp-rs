@@ -8,16 +8,16 @@ On [github.com/new](https://github.com/new):
 
 | Field | Value |
 |-------|--------|
-| Owner | `orenvill` |
+| Owner | `OrenVill` ([profile](https://github.com/OrenVill)) |
 | Name | `arxiv-mcp-rs` |
 | Visibility | **Public** |
 | README / .gitignore / license | **None** (empty repo) |
 
-Note the clone URL, e.g. `https://github.com/orenvill/arxiv-mcp-rs.git`.
+Note the clone URL: `https://github.com/OrenVill/arxiv-mcp-rs.git`.
 
 ## 2. Give the Cloud Agent `gh` access
 
-Add **`GH_TOKEN`** (or `GITHUB_TOKEN`) in [Cursor Secrets](https://cursor.com/settings) with `repo` scope, bind it to your Cloud Agent **environment**, then **start a new agent run** (secrets are picked up on boot).
+Add **`GH_TOKEN`** (or `GITHUB_TOKEN`) in [Cursor Secrets](https://cursor.com/settings) with `repo` scope, attach it to your Cloud Agent **environment**, then **start a new agent run that uses that environment** (this run must show a linked environment in Cloud settings—otherwise the token is not on the VM).
 
 Or complete device login in the agent terminal: `gh auth login -h github.com -p https -w`.
 
@@ -28,7 +28,7 @@ Replace the URL if your repo name or owner differs:
 ```bash
 cd /workspace
 git remote remove github 2>/dev/null || true
-git remote add github https://github.com/orenvill/arxiv-mcp-rs.git
+git remote add github https://github.com/OrenVill/arxiv-mcp-rs.git
 git push -u github main
 ```
 
