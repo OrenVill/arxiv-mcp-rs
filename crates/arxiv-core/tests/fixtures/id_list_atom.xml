@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <entry>
+    <id>http://arxiv.org/abs/2404.19756v1</id>
+    <published>2024-04-30T18:00:00Z</published>
+    <title>Example Paper Title</title>
+    <summary>Example abstract for fixture testing.</summary>
+    <author><name>Jane Doe</name></author>
+    <arxiv:primary_category term="cs.AI"/>
+    <category term="cs.AI"/>
+    <link title="pdf" href="https://arxiv.org/pdf/2404.19756v1" rel="related" type="application/pdf"/>
+  </entry>
+</feed>

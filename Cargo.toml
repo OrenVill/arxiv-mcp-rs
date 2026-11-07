@@ -31,6 +31,8 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
 quick-xml = { version = "0.37", features = ["serialize"] }
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+urlencoding = "2.1"
 scraper = "0.23"
 lopdf = "0.35"
 pdf-extract = "0.8"
