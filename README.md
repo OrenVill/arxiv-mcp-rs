@@ -1,78 +1,73 @@
 # arxiv-mcp-rs
 
-Stateless Rust MCP server for arXiv literature work: upstream-aligned **tools and prompts** (per [SPEC.md](./SPEC.md)), fresh on-disk store, **stdio + Streamable HTTP** in v1, built-in PDF path (`pdf-extract` + `lopdf`).
+Rust MCP server for arXiv literature work. It exposes the same **tool and prompt names** as the popular Python [arxiv-mcp-server](https://pypi.org/project/arxiv-mcp-server/) reference, with a **stateless** process model, a **fresh on-disk store** under your home directory, and **stdio or Streamable HTTP** transports.
 
-**Origin:** https://cursor.com/codebase/oren/arxiv-mcp-rs (**Private** by default; change visibility in repo settings)
+Search papers, fetch abstracts, download HTML (with PDF fallback) into Markdown, list what you have locally, and read cached content—plus seven workflow **prompts** for agents.
 
-**Upstream inspiration:** [blazickjp/arxiv-mcp-server](https://pypi.org/project/arxiv-mcp-server/) on PyPI (behavioral reference; not a cache drop-in).
+**Origin:** https://cursor.com/codebase/oren/arxiv-mcp-rs  
+**GitHub mirror:** https://github.com/OrenVill/arxiv-mcp-rs
 
-## Status
+## Quick start
 
-| Milestone | Deliverable | State |
-|-----------|-------------|-------|
-| **M1** | Workspace scaffold, ID validation, stdio + stateless HTTP MCP shell, `ping` | **Done** |
-| **M2** | `StoreBackend` v1 — manifest layout, atomic writes, optional `--quota-mb` | **Done** |
-| **M3** | `search_papers`, `get_abstract`, Atom fixtures, in-memory cache, tool `inputSchema` contracts | **Done** |
-| **M4** | `download_paper` (HTML), `list_papers`, `read_paper`, in-flight dedup | **Done** |
-| **M5** | PDF fallback + golden Markdown vs upstream | **Done** — HTML-first `download_paper`; PDF fallback; golden fixture under `tests/golden/` |
-| **M6** | Seven upstream prompts + SHA-256 snapshot tests | **Done** |
-| **M7** | Security scenario suite + untrusted content policy | **Done** |
-| **M8** | Benchmarks, README, v0.1.0 release | **This branch** |
-
-v0.1.0 tag is next after release checklist (CI workflow on GitHub when `workflow` scope is available).
-
-## Security scenario matrix (summary)
-
-Automated coverage for [SPEC.md §10.6](./SPEC.md) release gate. **arxiv-mcp-rs** enforces these before network or store I/O where noted; Python upstream behavior is the reference for parity, not a guarantee of identical hardening.
-
-| Scenario | arxiv-mcp-rs | Test / location |
-|----------|--------------|-----------------|
-| `paper_id` = `../../../etc/passwd` | Rejected (ID parse) | `crates/arxiv-core/tests/security_id_matrix.rs` |
-| `paper_id` = `https://evil.com/x` | Rejected (ID parse) | same |
-| Redirect to non-allowlisted host | Blocked | `crates/arxiv-fetch/tests/redirect_allowlist.rs` |
-| Symlink paper directory | Blocked | `crates/arxiv-store/src/local.rs` (`rejects_symlink_paper_dir`) |
-| Store quota exceeded | Bounded error (`quota exceeded`) | `crates/arxiv-store` unit tests |
-| Untrusted banner + sanitize defaults | `CONTENT_WARNING` on first chunk; NFC + invisible-char strip | `crates/arxiv-core/tests/security_untrusted_policy.rs` |
-| Oversized PDF download | Capped via fetch/converter limits (see env table in SPEC §10.3) | Policy in code; live size gates expanded with M5 |
-| stdout contains non-JSON-RPC during stdio | Logs on stderr only (`tracing`); MCP on stdout | `crates/arxiv-mcp-rs/src/main.rs` |
-
-## Clone locally (Windows → WSL)
-
-See [docs/ORIGIN.md](./docs/ORIGIN.md) for Origin CLI install, auth, and `origin repo clone oren/arxiv-mcp-rs`.
-
-## Requirements
-
-- Rust **1.89+** ([rust-toolchain.toml](./rust-toolchain.toml))
-- Linux / macOS / Windows for builds (CI: Linux x86_64)
-
-## Build and test
+**Requirements:** Rust **1.89+** (see [rust-toolchain.toml](./rust-toolchain.toml)).
 
 ```bash
+# Build
 cargo build --release
-cargo test --workspace
-cargo run -- serve --transport stdio
+
+# Smoke test (store path, legacy-cache warning, allowlist)
+cargo run -- check
+
+# Run MCP on stdio (what Cursor / Claude attach to)
+cargo run --release -- serve
+
+# Optional: download one paper from the shell (no MCP client needed)
+cargo run --release -- fetch 1706.03762
 ```
 
-### Benchmarks (M8 stub)
-
-Micro-benchmark for hot-path ID parsing (full cold-start / RSS / binary-size table ships after M5 golden job):
+Install the binary on your `PATH` if you prefer:
 
 ```bash
-cargo bench -p arxiv-core --bench id_parse
+cargo install --path crates/arxiv-mcp-rs
+arxiv-mcp-rs serve
 ```
 
-See [benches/README.md](./benches/README.md) for manual measurement recipes vs `uvx arxiv-mcp-server`.
-
-### Streamable HTTP (v1)
+**HTTP mode** (Streamable MCP, stateless sessions):
 
 ```bash
-TRANSPORT=http PORT=8000 cargo run -- serve --transport http --host 127.0.0.1 --port 8000
+cargo run --release -- serve --transport http --host 127.0.0.1 --port 8000
 ```
 
-- MCP: `http://127.0.0.1:8000/mcp`
-- Health: `GET http://127.0.0.1:8000/healthz` → `ok`
+| Endpoint | URL |
+|----------|-----|
+| MCP | `http://127.0.0.1:8000/mcp` |
+| Health | `GET http://127.0.0.1:8000/healthz` → `ok` |
 
-Bind defaults to loopback; put TLS and auth in front of HTTP in production ([SPEC.md §12.3](./SPEC.md)).
+Bind stays on loopback by default; put TLS and auth in front for anything beyond local use ([SPEC.md §12.3](./SPEC.md)).
+
+## What you get
+
+### Tools
+
+| Tool | Purpose |
+|------|---------|
+| `search_papers` | Query arXiv (categories, dates, pagination) |
+| `get_abstract` | Metadata + abstract for one ID |
+| `download_paper` | HTML-first download → Markdown on disk; PDF fallback |
+| `list_papers` | Index of cached papers |
+| `read_paper` | Read cached Markdown (bounded pagination) |
+
+Paper text is **untrusted external content**; responses may include a content warning on the first chunk.
+
+### Prompts
+
+`research-discovery`, `deep-paper-analysis`, `summarize_paper`, `compare_papers`, `literature_review`, `literature-synthesis`, `research-question` — instruction templates for agents (no model runs inside the server).
+
+## Storage
+
+- Default store: `~/.arxiv-mcp-rs/papers` (per-paper `content.md` + `manifest.json`).
+- Does **not** import the Python server’s flat cache; `check` warns if `~/.arxiv-mcp-server/papers` exists.
+- Override with `--storage-path` or `ARXIV_STORAGE_PATH`.
 
 ## Configuration
 
@@ -81,14 +76,16 @@ Bind defaults to loopback; put TLS and auth in front of HTTP in production ([SPE
 | Storage root | `--storage-path` | `ARXIV_STORAGE_PATH` | `~/.arxiv-mcp-rs/papers` |
 | Transport | `--transport` | `TRANSPORT` | `stdio` |
 | HTTP bind | `--host`, `--port` | `HOST`, `PORT` | `127.0.0.1:8000` |
-| Contact (User-Agent) | `--contact-email` | `ARXIV_CONTACT_EMAIL` | unset |
-| Store quota | — (CLI extension planned) | `STORE_QUOTA_MB` | none |
-| Strict sanitize | — | `STRICT_SANITIZE` | `0` |
-| Default page size | — | `DEFAULT_MAX_CHARS` | `12000` |
+| User-Agent contact | `--contact-email` | `ARXIV_CONTACT_EMAIL` | unset |
+| Store quota | — | `STORE_QUOTA_MB` | no cap |
+| Strict sanitize | — | `STRICT_SANITIZE` | off |
+| Read page size | — | `DEFAULT_MAX_CHARS` | `12000` |
 
-Default store: `~/.arxiv-mcp-rs/papers` (**D2:** does not read or migrate Python `~/.arxiv-mcp-server/papers`; `check` warns if legacy flat cache exists).
+More env vars and limits: [SPEC.md](./SPEC.md).
 
-### MCP client — Cursor / VS Code (`mcp.json`)
+## Connect an MCP client
+
+### Cursor / VS Code (`mcp.json`)
 
 ```json
 {
@@ -108,7 +105,7 @@ Default store: `~/.arxiv-mcp-rs/papers` (**D2:** does not read or migrate Python
 
 ### Claude Desktop
 
-Edit `claude_desktop_config.json` (macOS: `~/Library/Application Support/Claude/`, Windows: `%APPDATA%\Claude\`):
+`claude_desktop_config.json` (macOS: `~/Library/Application Support/Claude/`, Windows: `%APPDATA%\Claude\`):
 
 ```json
 {
@@ -123,8 +120,6 @@ Edit `claude_desktop_config.json` (macOS: `~/Library/Application Support/Claude/
 
 ### Claude Code
 
-Project or user MCP config (stdio):
-
 ```json
 {
   "mcpServers": {
@@ -137,30 +132,19 @@ Project or user MCP config (stdio):
 }
 ```
 
-### HTTP client (Streamable MCP)
+### HTTP client
 
-Point the client at `http://127.0.0.1:8000/mcp` when the server runs with `TRANSPORT=http`. No auth in v1—terminate TLS and access control at your proxy.
+Point the client at `http://127.0.0.1:8000/mcp` when the server runs with `--transport http`.
 
-## Tools and prompts (v1 surface)
+## Develop
 
-**Tools:** `search_papers`, `get_abstract`, `download_paper`, `list_papers`, `read_paper` (plus scaffold `ping`).
+```bash
+cargo test --workspace
+cargo clippy --all-targets -- -D warnings
+cargo fmt --all
+```
 
-**Prompts:** `literature_review`, `research_discovery`, `research_question`, `literature_synthesis`, `summarize_paper`, `deep_paper_analysis`, `compare_papers` (snapshot-tested).
-
-## Crate layout
-
-| Crate | Role |
-|-------|------|
-| `arxiv-mcp-rs` | CLI binary (`serve`, `check`, `fetch`) |
-| `arxiv-mcp` | MCP handlers, tools, prompts, transports |
-| `arxiv-core` | Config, Atom parsing, ID validation, untrusted policy |
-| `arxiv-store` | `StoreBackend` + local FS v1 |
-| `arxiv-fetch` | Allowlisted HTTP client + redirect policy |
-| `arxiv-convert` | HTML → Markdown; PDF extraction stub |
-
-## Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md): work on `main` or normal feature branches—no `cursor/` prefixes; no agent co-authors on commits.
+Clone from Origin: [docs/ORIGIN.md](./docs/ORIGIN.md). Architecture and contracts: [SPEC.md](./SPEC.md). Contributing: [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## License
 
