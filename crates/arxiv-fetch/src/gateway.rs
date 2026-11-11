@@ -1,6 +1,6 @@
 use arxiv_core::{
-    parse_atom_feed, ArxivError, ArxivGateway, ArxivRateLimiter, SearchParams, SearchQueryError,
-    build_html_url, build_id_list_url, build_pdf_url, build_search_url,
+    build_html_url, build_id_list_url, build_pdf_url, build_search_url, parse_atom_feed,
+    ArxivError, ArxivGateway, ArxivRateLimiter, SearchParams, SearchQueryError,
 };
 use async_trait::async_trait;
 use reqwest::StatusCode;

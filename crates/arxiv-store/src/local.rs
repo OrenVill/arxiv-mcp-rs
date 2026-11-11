@@ -10,9 +10,7 @@ use tokio::sync::{Mutex, RwLock};
 
 use crate::io_util::{atomic_write, reject_symlink};
 use crate::manifest::ManifestV1;
-use crate::{
-    ListPaperItem, ListResponse, StoreBackend, StoreError, StoreRecord, StoredPaper,
-};
+use crate::{ListPaperItem, ListResponse, StoreBackend, StoreError, StoreRecord, StoredPaper};
 
 #[derive(Debug, Clone)]
 pub struct LocalFsStore {
@@ -68,7 +66,9 @@ impl LocalFsStore {
         while let Some(entry) = rd.next_entry().await? {
             let ft = entry.file_type().await?;
             if ft.is_symlink() {
-                return Err(StoreError::SymlinkRejected(entry.path().display().to_string()));
+                return Err(StoreError::SymlinkRejected(
+                    entry.path().display().to_string(),
+                ));
             }
             if ft.is_file() {
                 total += entry.metadata().await?.len();
@@ -89,7 +89,9 @@ impl LocalFsStore {
         while let Some(entry) = rd.next_entry().await? {
             let ft = entry.file_type().await?;
             if ft.is_symlink() {
-                return Err(StoreError::SymlinkRejected(entry.path().display().to_string()));
+                return Err(StoreError::SymlinkRejected(
+                    entry.path().display().to_string(),
+                ));
             }
             if ft.is_dir() {
                 total += Self::dir_file_bytes(&entry.path()).await?;
@@ -239,7 +241,9 @@ impl StoreBackend for LocalFsStore {
         while let Some(entry) = rd.next_entry().await? {
             let ft = entry.file_type().await?;
             if ft.is_symlink() {
-                return Err(StoreError::SymlinkRejected(entry.path().display().to_string()));
+                return Err(StoreError::SymlinkRejected(
+                    entry.path().display().to_string(),
+                ));
             }
             if !ft.is_dir() {
                 continue;

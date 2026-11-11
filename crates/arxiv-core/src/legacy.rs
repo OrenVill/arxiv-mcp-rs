@@ -4,7 +4,9 @@ use std::path::{Path, PathBuf};
 
 /// Default papers directory used by `arxiv-mcp-server` (Python).
 pub fn legacy_python_storage_path() -> PathBuf {
-    super::config::dirs_home().join(".arxiv-mcp-server").join("papers")
+    super::config::dirs_home()
+        .join(".arxiv-mcp-server")
+        .join("papers")
 }
 
 /// True when *root* looks like the upstream flat cache (`*.md` at top level).

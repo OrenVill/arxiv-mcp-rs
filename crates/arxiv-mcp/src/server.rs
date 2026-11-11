@@ -109,10 +109,7 @@ struct ReadPaperToolInput {
 #[tool_router]
 impl ArxivMcpService {
     #[tool(description = "Scaffold health check.")]
-    async fn ping(
-        &self,
-        Parameters(PingInput { message }): Parameters<PingInput>,
-    ) -> String {
+    async fn ping(&self, Parameters(PingInput { message }): Parameters<PingInput>) -> String {
         format!(
             "arxiv-mcp-rs {}",
             message.unwrap_or_else(|| "ok".to_string())
@@ -123,10 +120,7 @@ impl ArxivMcpService {
         name = "search_papers",
         description = "Search arXiv by query with optional categories, date range, sort, and pagination."
     )]
-    async fn search_papers(
-        &self,
-        Parameters(input): Parameters<SearchPapersToolInput>,
-    ) -> String {
+    async fn search_papers(&self, Parameters(input): Parameters<SearchPapersToolInput>) -> String {
         tools::search_papers(
             &self.state,
             SearchPapersInput {
@@ -193,10 +187,7 @@ impl ArxivMcpService {
         name = "read_paper",
         description = "Read stored Markdown for a downloaded paper with pagination."
     )]
-    async fn read_paper(
-        &self,
-        Parameters(input): Parameters<ReadPaperToolInput>,
-    ) -> String {
+    async fn read_paper(&self, Parameters(input): Parameters<ReadPaperToolInput>) -> String {
         tools::read_paper(
             &self.state,
             tools::ReadPaperInput {
@@ -320,7 +311,10 @@ pub async fn run_stdio(state: AppState) -> anyhow::Result<()> {
         .serve(stdio())
         .await
         .context("failed to start stdio MCP transport")?;
-    running.waiting().await.context("stdio MCP server stopped")?;
+    running
+        .waiting()
+        .await
+        .context("stdio MCP server stopped")?;
     Ok(())
 }
 

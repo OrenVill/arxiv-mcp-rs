@@ -18,9 +18,7 @@ struct RateState {
 impl ArxivRateLimiter {
     pub fn new(min_interval: Duration) -> Self {
         Self {
-            inner: Arc::new(Mutex::new(RateState {
-                last_started: None,
-            })),
+            inner: Arc::new(Mutex::new(RateState { last_started: None })),
             min_interval,
         }
     }

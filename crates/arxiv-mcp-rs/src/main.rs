@@ -2,8 +2,8 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 
 use anyhow::Context;
-use arxiv_core::{legacy_flat_store_detected, legacy_python_storage_path, Config};
 use arxiv_convert::CONVERTER_VERSION;
+use arxiv_core::{legacy_flat_store_detected, legacy_python_storage_path, Config};
 use arxiv_mcp::{download_paper, run_http, run_stdio, AppState, DownloadPaperInput};
 use arxiv_store::StoreBackend;
 use clap::{Parser, Subcommand, ValueEnum};

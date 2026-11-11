@@ -1,8 +1,8 @@
 //! Stateless prompt body generation (upstream `handlers.get_prompt` parity).
 
 use super::args::{
-    LiteratureReviewArgs, LiteratureSynthesisArgs, PaperIdArgs, PaperIdsArgs, ResearchDiscoveryArgs,
-    ResearchQuestionArgs,
+    LiteratureReviewArgs, LiteratureSynthesisArgs, PaperIdArgs, PaperIdsArgs,
+    ResearchDiscoveryArgs, ResearchQuestionArgs,
 };
 
 const DEEP_PAPER_ANALYSIS_BODY: &str = include_str!("../../prompts/deep_paper_analysis.md");
@@ -66,11 +66,7 @@ pub fn compare_papers(args: &PaperIdsArgs) -> String {
 }
 
 pub fn literature_review(args: &LiteratureReviewArgs) -> String {
-    let optional_ids = match args
-        .paper_ids
-        .as_deref()
-        .filter(|s| !s.is_empty())
-    {
+    let optional_ids = match args.paper_ids.as_deref().filter(|s| !s.is_empty()) {
         Some(ids) => format!("\nFocus papers: {ids}."),
         None => String::new(),
     };

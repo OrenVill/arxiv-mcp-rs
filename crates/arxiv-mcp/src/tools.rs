@@ -1,15 +1,13 @@
 mod papers;
 
-pub use papers::{
-    download_paper, list_papers, read_paper, DownloadPaperInput, ReadPaperInput,
-};
+pub use papers::{download_paper, list_papers, read_paper, DownloadPaperInput, ReadPaperInput};
 
 use std::sync::Arc;
 
 use arxiv_core::{
-    paper_to_json_map, sanitize_returned_text, strict_sanitize_from_env, ArxivError, ArxivGateway,
-    ArxivId, CachedAtom, CacheKey, CONTENT_WARNING, SearchCache, SearchParams, SortBy,
-    validate_categories, AbstractMode,
+    paper_to_json_map, sanitize_returned_text, strict_sanitize_from_env, validate_categories,
+    AbstractMode, ArxivError, ArxivGateway, ArxivId, CacheKey, CachedAtom, SearchCache,
+    SearchParams, SortBy, CONTENT_WARNING,
 };
 use serde::Serialize;
 use serde_json::json;
@@ -17,8 +15,7 @@ use serde_json::json;
 use crate::cache::MemorySearchCache;
 use crate::AppState;
 
-const CATEGORY_ERROR: &str =
-    "Invalid category provided. Please check arXiv category names.";
+const CATEGORY_ERROR: &str = "Invalid category provided. Please check arXiv category names.";
 
 pub(crate) fn json_pretty(value: &impl Serialize) -> String {
     serde_json::to_string_pretty(value).unwrap_or_else(|_| "{}".into())
@@ -264,8 +261,7 @@ mod tests {
             categories: vec![],
             abstract_mode: AbstractMode::Snippet,
         };
-        let text =
-            search_papers_with_gateway(gateway.clone(), cache.clone(), params.clone()).await;
+        let text = search_papers_with_gateway(gateway.clone(), cache.clone(), params.clone()).await;
         assert!(text.contains("\"papers\""));
         assert!(text.contains(CONTENT_WARNING));
         let again = search_papers_with_gateway(gateway, cache, params).await;
@@ -297,8 +293,7 @@ mod tests {
     async fn get_abstract_rejects_path_traversal_before_network() {
         let gateway: Arc<dyn ArxivGateway> = Arc::new(NoNetworkGateway);
         let cache: Arc<dyn SearchCache> = Arc::new(MemorySearchCache::new());
-        let body =
-            get_abstract_with_gateway(gateway, cache, "../../../etc/passwd".into()).await;
+        let body = get_abstract_with_gateway(gateway, cache, "../../../etc/passwd".into()).await;
         assert!(body.contains("\"status\": \"error\""));
         assert!(body.contains("invalid arXiv ID"));
     }

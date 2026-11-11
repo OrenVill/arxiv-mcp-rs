@@ -5,8 +5,7 @@ use std::path::PathBuf;
 use arxiv_convert::pdf_to_markdown;
 
 fn golden_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../tests/golden")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/golden")
 }
 
 fn fixture_pdf() -> PathBuf {
@@ -21,7 +20,9 @@ fn expected_md() -> PathBuf {
 fn golden_markdown_minimal_pdf() {
     let pdf = std::fs::read(fixture_pdf()).expect("read minimal.pdf fixture");
     let got = pdf_to_markdown(&pdf).expect("convert golden PDF");
-    let update = std::env::var("UPDATE_GOLDEN").ok().is_some_and(|v| v == "1");
+    let update = std::env::var("UPDATE_GOLDEN")
+        .ok()
+        .is_some_and(|v| v == "1");
 
     if update {
         std::fs::write(expected_md(), format!("{got}\n")).expect("write golden");

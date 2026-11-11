@@ -28,10 +28,7 @@ fn accepts_representative_new_and_legacy_ids() {
 fn rejects_backslash_paths_and_oversize() {
     assert!(ArxivId::parse(r"arxiv\abs\2404.19756").is_err());
     let long = "2".repeat(121);
-    assert!(matches!(
-        ArxivId::parse(&long),
-        Err(ParseIdError::TooLong)
-    ));
+    assert!(matches!(ArxivId::parse(&long), Err(ParseIdError::TooLong)));
 }
 
 #[test]

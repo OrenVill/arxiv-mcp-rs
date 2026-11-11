@@ -3,9 +3,8 @@ use std::collections::HashSet;
 const ARXIV_API_URL: &str = "https://export.arxiv.org/api/query";
 const MAX_RESULTS_CAP: u32 = 50;
 
-const USER_QUERY_FIELD_PREFIXES: &[&str] = &[
-    "ti:", "au:", "abs:", "cat:", "co:", "jr:", "rn:", "all:",
-];
+const USER_QUERY_FIELD_PREFIXES: &[&str] =
+    &["ti:", "au:", "abs:", "cat:", "co:", "jr:", "rn:", "all:"];
 
 const VALID_CATEGORY_PREFIXES: &[&str] = &[
     "cs", "econ", "eess", "math", "physics", "q-bio", "q-fin", "stat", "astro-ph", "cond-mat",
@@ -144,10 +143,8 @@ fn build_arxiv_search_query(
         query_parts.push(scope_user_query(query));
     }
     if !categories.is_empty() {
-        let category_filter: Vec<String> = categories
-            .iter()
-            .map(|cat| format!("cat:{cat}"))
-            .collect();
+        let category_filter: Vec<String> =
+            categories.iter().map(|cat| format!("cat:{cat}")).collect();
         query_parts.push(format!("({})", category_filter.join(" OR ")));
     }
     if date_from.is_some() || date_to.is_some() {

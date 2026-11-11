@@ -79,9 +79,7 @@ impl AllowlistedHttp {
                 let Some(location) = response.headers().get(reqwest::header::LOCATION) else {
                     return Err(FetchError::Http(response.status()));
                 };
-                let location = location
-                    .to_str()
-                    .map_err(|_| FetchError::BlockedRedirect)?;
+                let location = location.to_str().map_err(|_| FetchError::BlockedRedirect)?;
                 url = resolve_redirect(&url, location)?;
                 continue;
             }
@@ -119,9 +117,7 @@ impl AllowlistedHttp {
                 let Some(location) = response.headers().get(reqwest::header::LOCATION) else {
                     return Err(FetchError::Http(response.status()));
                 };
-                let location = location
-                    .to_str()
-                    .map_err(|_| FetchError::BlockedRedirect)?;
+                let location = location.to_str().map_err(|_| FetchError::BlockedRedirect)?;
                 url = resolve_redirect(&url, location)?;
                 continue;
             }

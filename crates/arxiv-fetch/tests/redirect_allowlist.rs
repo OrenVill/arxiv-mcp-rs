@@ -1,8 +1,6 @@
 //! Redirect allowlist security scenarios (SPEC §10.2).
 
-use arxiv_fetch::{
-    resolve_redirect, validate_https_allowlisted, AllowlistedClient, FetchError,
-};
+use arxiv_fetch::{resolve_redirect, validate_https_allowlisted, AllowlistedClient, FetchError};
 use reqwest::Url;
 
 #[test]

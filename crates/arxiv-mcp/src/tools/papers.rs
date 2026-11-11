@@ -1,9 +1,7 @@
 use std::time::Duration;
 
 use arxiv_convert::{html_to_markdown, pdf_to_markdown, ConvertError, CONVERTER_VERSION};
-use arxiv_core::{
-    content_warning_for_chunk, paginate_content, ArxivError, ArxivId, ContentPage,
-};
+use arxiv_core::{content_warning_for_chunk, paginate_content, ArxivError, ArxivId, ContentPage};
 use arxiv_store::{FetchedVia, ManifestV1, StoreBackend, StoreError, StoreRecord};
 use chrono::Utc;
 use serde_json::json;
@@ -43,7 +41,11 @@ pub async fn download_paper(state: &AppState, input: DownloadPaperInput) -> Stri
 
     if !input.force {
         if let Ok(true) = state.store.has_paper(&parsed).await {
-            if let Ok(stored) = state.store.read_paper(&ArxivId::parse(&bare_key).unwrap()).await {
+            if let Ok(stored) = state
+                .store
+                .read_paper(&ArxivId::parse(&bare_key).unwrap())
+                .await
+            {
                 if stored.manifest.converter_version == CONVERTER_VERSION {
                     return paper_success_json(
                         &stored.manifest,
@@ -156,7 +158,8 @@ async fn fetch_pdf_markdown(
         .fetch_pdf(pdf_id)
         .await
         .map_err(download_error)?;
-    let markdown = pdf_to_markdown(&pdf_bytes).map_err(|e| format!("PDF conversion failed: {e}"))?;
+    let markdown =
+        pdf_to_markdown(&pdf_bytes).map_err(|e| format!("PDF conversion failed: {e}"))?;
     Ok((markdown, FetchedVia::Pdf))
 }
 
@@ -303,10 +306,7 @@ mod tests {
 
     #[async_trait]
     impl ArxivGateway for HtmlGateway {
-        async fn search(
-            &self,
-            _params: &arxiv_core::SearchParams,
-        ) -> Result<AtomFeed, ArxivError> {
+        async fn search(&self, _params: &arxiv_core::SearchParams) -> Result<AtomFeed, ArxivError> {
             Err(ArxivError::Query("unused".into()))
         }
 

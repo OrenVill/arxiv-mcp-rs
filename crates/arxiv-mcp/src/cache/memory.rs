@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
-use arxiv_core::{CachedAtom, CacheKey, SearchCache};
+use arxiv_core::{CacheKey, CachedAtom, SearchCache};
 use async_trait::async_trait;
 use tokio::sync::RwLock;
 

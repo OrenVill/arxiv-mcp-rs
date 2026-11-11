@@ -64,9 +64,7 @@ pub fn literature_synthesis_arguments() -> Vec<PromptArgument> {
             .with_description("Comma-separated list of arXiv paper IDs")
             .with_required(true),
         PromptArgument::new("synthesis_type")
-            .with_description(
-                "Synthesis type (themes/methods/timeline/gaps/comprehensive)",
-            )
+            .with_description("Synthesis type (themes/methods/timeline/gaps/comprehensive)")
             .with_required(false),
         PromptArgument::new("domain")
             .with_description("Academic domain (e.g., computer_science/physics/biology)")

@@ -5,7 +5,10 @@ use std::collections::HashMap;
 use arxiv_mcp::{all_prompt_definitions, prompt_text_from_map, prompt_text_sha256, PROMPT_NAMES};
 
 fn map(pairs: &[(&str, &str)]) -> HashMap<String, String> {
-    pairs.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()
+    pairs
+        .iter()
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .collect()
 }
 
 #[test]
@@ -79,10 +82,7 @@ fn prompt_sha256_snapshots() {
     for (name, args, expected_sha) in cases {
         let text = prompt_text_from_map(name, &args).expect("render prompt");
         let sha = prompt_text_sha256(&text);
-        assert_eq!(
-            sha, expected_sha,
-            "SHA-256 mismatch for prompt {name}"
-        );
+        assert_eq!(sha, expected_sha, "SHA-256 mismatch for prompt {name}");
     }
 }
 
