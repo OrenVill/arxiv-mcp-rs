@@ -63,11 +63,15 @@ download_paper to cache full Markdown."
                 query: input.query,
                 max_results: input.max_results,
                 start: input.start,
-                abstract_mode: input.abstract_mode.map(|m| m.to_parse_string().to_string()),
+                abstract_mode: Some(input.abstract_mode.to_parse_string().to_string()),
                 date_from: input.date_from,
                 date_to: input.date_to,
-                categories: input.categories,
-                sort_by: input.sort_by.map(|s| s.to_parse_string().to_string()),
+                categories: if input.categories.is_empty() {
+                    None
+                } else {
+                    Some(input.categories)
+                },
+                sort_by: Some(input.sort_by.to_parse_string().to_string()),
             },
         )
         .await

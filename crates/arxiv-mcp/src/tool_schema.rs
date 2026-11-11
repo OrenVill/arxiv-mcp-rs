@@ -4,13 +4,14 @@ use rmcp::schemars;
 use serde::Deserialize;
 
 /// How much abstract text to include in each search hit.
-#[derive(Debug, Clone, Copy, Deserialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, Copy, Default, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum AbstractModeArg {
     /// Metadata only; omit abstract body from each hit.
     #[schemars(description = "Omit abstract text from search results.")]
     None,
     /// Short excerpt per paper (default upstream behavior).
+    #[default]
     #[schemars(description = "Include a short abstract snippet (~280 characters) per hit.")]
     Snippet,
     /// Full abstract text when arXiv provides it.
@@ -19,10 +20,11 @@ pub enum AbstractModeArg {
 }
 
 /// Search result ordering.
-#[derive(Debug, Clone, Copy, Deserialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, Copy, Default, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum SortByArg {
     /// Best match first (default).
+    #[default]
     #[schemars(description = "Sort by relevance to the query.")]
     Relevance,
     /// Newest submission date first.
@@ -30,10 +32,12 @@ pub enum SortByArg {
     Date,
 }
 
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
+#[derive(Debug, Default, Deserialize, schemars::JsonSchema)]
 #[schemars(
     title = "search_papers",
-    description = "Search the arXiv catalog. Returns JSON with paper ids, titles, authors, and optional abstract snippets."
+    description = "Search the arXiv catalog. Returns JSON with paper ids, titles, authors, and optional abstract snippets. \
+Example call: {\"query\":\"attention\",\"abstract_mode\":\"snippet\",\"sort_by\":\"relevance\",\"categories\":[\"cs.LG\"]}. \
+Use categories:[] (or omit the field) to search all subjects."
 )]
 pub struct SearchPapersToolInput {
     /// Search terms or field prefixes (`ti:`, `au:`, `abs:`, `cat:`, …). Example: `transformer attention`.
@@ -47,7 +51,7 @@ pub struct SearchPapersToolInput {
     pub start: Option<u32>,
     /// How abstract text appears in each hit. Default `snippet`.
     #[serde(default)]
-    pub abstract_mode: Option<AbstractModeArg>,
+    pub abstract_mode: AbstractModeArg,
     /// Filter submissions on or after this date (`YYYYMMDD`).
     #[serde(default)]
     #[schemars(example = "20240101")]
@@ -56,13 +60,17 @@ pub struct SearchPapersToolInput {
     #[serde(default)]
     #[schemars(example = "20241231")]
     pub date_to: Option<String>,
-    /// arXiv categories to require (ANDed), e.g. `cs.LG`, `stat.ML`, `physics.gen-ph`.
+    /// arXiv category codes to require (AND). Use an empty JSON array `[]` or omit for no category filter.
+    /// Each element is one code such as `cs.LG`, `stat.ML`, or `physics.gen-ph`.
     #[serde(default)]
-    #[schemars(example = &["cs.LG", "cs.AI"])]
-    pub categories: Option<Vec<String>>,
+    #[schemars(
+        description = "List of arXiv category strings. Empty array means no category filter.",
+        example = &["cs.LG"]
+    )]
+    pub categories: Vec<String>,
     /// Sort order for hits. Default `relevance`.
     #[serde(default)]
-    pub sort_by: Option<SortByArg>,
+    pub sort_by: SortByArg,
 }
 
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
