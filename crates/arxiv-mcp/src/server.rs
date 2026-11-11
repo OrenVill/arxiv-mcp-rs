@@ -9,7 +9,6 @@ use axum::Router;
 use rmcp::handler::server::router::prompt::PromptRouter;
 use rmcp::handler::server::router::tool::ToolRouter;
 use rmcp::handler::server::wrapper::Parameters;
-use rmcp::schemars;
 use rmcp::tool;
 use rmcp::transport::io::stdio;
 use rmcp::transport::streamable_http_server::{
@@ -18,13 +17,16 @@ use rmcp::transport::streamable_http_server::{
 use rmcp::{
     prompt, prompt_handler, prompt_router, tool_handler, tool_router, ServerHandler, ServiceExt,
 };
-use serde::Deserialize;
 use tokio_util::sync::CancellationToken;
 use tracing::info;
 
 use crate::prompts::{
     self, LiteratureReviewArgs, LiteratureSynthesisArgs, PaperIdArgs, PaperIdsArgs,
     ResearchDiscoveryArgs, ResearchQuestionArgs,
+};
+use crate::tool_schema::{
+    DownloadPaperToolInput, GetAbstractInput, ListPapersInput, ReadPaperToolInput,
+    SearchPapersToolInput,
 };
 use crate::tools::{self, SearchPapersInput};
 use crate::AppState;
@@ -46,79 +48,13 @@ impl ArxivMcpService {
     }
 }
 
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
-struct PingInput {
-    #[serde(default)]
-    message: Option<String>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
-struct SearchPapersToolInput {
-    query: String,
-    #[serde(default)]
-    max_results: Option<u32>,
-    #[serde(default)]
-    start: Option<u32>,
-    #[serde(default)]
-    abstract_mode: Option<String>,
-    #[serde(default)]
-    date_from: Option<String>,
-    #[serde(default)]
-    date_to: Option<String>,
-    #[serde(default)]
-    categories: Option<Vec<String>>,
-    #[serde(default)]
-    sort_by: Option<String>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
-struct GetAbstractInput {
-    paper_id: String,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
-struct DownloadPaperToolInput {
-    paper_id: String,
-    #[serde(default)]
-    start: Option<u32>,
-    #[serde(default)]
-    max_chars: Option<u32>,
-    #[serde(default)]
-    return_full_text: Option<bool>,
-    #[serde(default)]
-    force: Option<bool>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
-struct ListPapersInput {
-    #[serde(default)]
-    compact: Option<bool>,
-}
-
-#[derive(Debug, Deserialize, schemars::JsonSchema)]
-struct ReadPaperToolInput {
-    paper_id: String,
-    #[serde(default)]
-    start: Option<u32>,
-    #[serde(default)]
-    max_chars: Option<u32>,
-    #[serde(default)]
-    return_full_text: Option<bool>,
-}
-
 #[tool_router]
 impl ArxivMcpService {
-    #[tool(description = "Scaffold health check.")]
-    async fn ping(&self, Parameters(PingInput { message }): Parameters<PingInput>) -> String {
-        format!(
-            "arxiv-mcp-rs {}",
-            message.unwrap_or_else(|| "ok".to_string())
-        )
-    }
-
     #[tool(
         name = "search_papers",
-        description = "Search arXiv by query with optional categories, date range, sort, and pagination."
+        description = "Search arXiv.org for papers by free text and optional category or date filters. \
+Returns JSON with ids, titles, authors, and abstract snippets. Use get_abstract for one id or \
+download_paper to cache full Markdown."
     )]
     async fn search_papers(&self, Parameters(input): Parameters<SearchPapersToolInput>) -> String {
         tools::search_papers(
@@ -127,11 +63,11 @@ impl ArxivMcpService {
                 query: input.query,
                 max_results: input.max_results,
                 start: input.start,
-                abstract_mode: input.abstract_mode,
+                abstract_mode: input.abstract_mode.map(|m| m.to_parse_string().to_string()),
                 date_from: input.date_from,
                 date_to: input.date_to,
                 categories: input.categories,
-                sort_by: input.sort_by,
+                sort_by: input.sort_by.map(|s| s.to_parse_string().to_string()),
             },
         )
         .await
@@ -139,7 +75,7 @@ impl ArxivMcpService {
 
     #[tool(
         name = "get_abstract",
-        description = "Fetch abstract and metadata by arXiv ID without downloading the paper."
+        description = "Return abstract, title, authors, and dates for a single arXiv id. Does not write to the local store."
     )]
     async fn get_abstract(
         &self,
@@ -150,7 +86,8 @@ impl ArxivMcpService {
 
     #[tool(
         name = "download_paper",
-        description = "Download a paper via arXiv HTML, convert to Markdown, and return bounded text."
+        description = "Download and convert one paper to Markdown in the local store. HTML-first with PDF fallback. \
+Returns paginated JSON; set force to refresh from arXiv."
     )]
     async fn download_paper(
         &self,
@@ -174,7 +111,7 @@ impl ArxivMcpService {
 
     #[tool(
         name = "list_papers",
-        description = "List papers stored in the local v1 store."
+        description = "Enumerate papers already saved on disk by this server. Use compact for id/title only."
     )]
     async fn list_papers(
         &self,
@@ -185,7 +122,7 @@ impl ArxivMcpService {
 
     #[tool(
         name = "read_paper",
-        description = "Read stored Markdown for a downloaded paper with pagination."
+        description = "Read Markdown for a paper that was downloaded earlier. Paginate with start and max_chars."
     )]
     async fn read_paper(&self, Parameters(input): Parameters<ReadPaperToolInput>) -> String {
         tools::read_paper(
