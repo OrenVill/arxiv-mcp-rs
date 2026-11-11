@@ -25,8 +25,8 @@ use crate::prompts::{
     ResearchDiscoveryArgs, ResearchQuestionArgs,
 };
 use crate::tool_schema::{
-    DownloadPaperToolInput, GetAbstractInput, ListPapersInput, ReadPaperToolInput,
-    SearchPapersToolInput,
+    categories_string_to_vec, DownloadPaperToolInput, GetAbstractInput, ListPapersInput,
+    ReadPaperToolInput, SearchPapersToolInput,
 };
 use crate::tools::{self, SearchPapersInput};
 use crate::AppState;
@@ -66,10 +66,13 @@ download_paper to cache full Markdown."
                 abstract_mode: Some(input.abstract_mode.to_parse_string().to_string()),
                 date_from: input.date_from,
                 date_to: input.date_to,
-                categories: if input.categories.is_empty() {
-                    None
-                } else {
-                    Some(input.categories)
+                categories: {
+                    let list = categories_string_to_vec(&input.categories);
+                    if list.is_empty() {
+                        None
+                    } else {
+                        Some(list)
+                    }
                 },
                 sort_by: Some(input.sort_by.to_parse_string().to_string()),
             },

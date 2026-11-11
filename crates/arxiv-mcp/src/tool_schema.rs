@@ -1,7 +1,33 @@
 //! JSON Schema for MCP tools (agent-facing descriptions and enums).
 
 use rmcp::schemars;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
+
+/// Parse the agent-facing `categories` string into arXiv category codes.
+pub fn categories_string_to_vec(categories: &str) -> Vec<String> {
+    categories
+        .split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
+        .collect()
+}
+
+fn deserialize_categories<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum Raw {
+        Text(String),
+        List(Vec<String>),
+    }
+    match Raw::deserialize(deserializer)? {
+        Raw::Text(text) => Ok(text),
+        Raw::List(list) => Ok(list.join(",")),
+    }
+}
 
 /// How much abstract text to include in each search hit.
 #[derive(Debug, Clone, Copy, Default, Deserialize, schemars::JsonSchema)]
@@ -36,8 +62,7 @@ pub enum SortByArg {
 #[schemars(
     title = "search_papers",
     description = "Search the arXiv catalog. Returns JSON with paper ids, titles, authors, and optional abstract snippets. \
-Example call: {\"query\":\"attention\",\"abstract_mode\":\"snippet\",\"sort_by\":\"relevance\",\"categories\":[\"cs.LG\"]}. \
-Use categories:[] (or omit the field) to search all subjects."
+Example: {\"query\":\"attention\",\"abstract_mode\":\"snippet\",\"sort_by\":\"relevance\",\"categories\":\"cs.LG\"}."
 )]
 pub struct SearchPapersToolInput {
     /// Search terms or field prefixes (`ti:`, `au:`, `abs:`, `cat:`, …). Example: `transformer attention`.
@@ -60,14 +85,13 @@ pub struct SearchPapersToolInput {
     #[serde(default)]
     #[schemars(example = "20241231")]
     pub date_to: Option<String>,
-    /// arXiv category codes to require (AND). Use an empty JSON array `[]` or omit for no category filter.
-    /// Each element is one code such as `cs.LG`, `stat.ML`, or `physics.gen-ph`.
-    #[serde(default)]
+    /// arXiv category codes to AND. Use `cs.LG`, comma-separated `cs.LG,stat.ML`, or empty string for all subjects.
+    #[serde(default, deserialize_with = "deserialize_categories")]
     #[schemars(
-        description = "List of arXiv category strings. Empty array means no category filter.",
-        example = &["cs.LG"]
+        example = "cs.LG",
+        description = "Category filter as one string (not a JSON array). Examples: cs.LG or cs.LG,stat.ML."
     )]
-    pub categories: Vec<String>,
+    pub categories: String,
     /// Sort order for hits. Default `relevance`.
     #[serde(default)]
     pub sort_by: SortByArg,
